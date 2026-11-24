@@ -1,0 +1,41 @@
+name: Build RSS Feed
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run feed generator script
+        env:
+          FEED_BASE_URL: "https://urbanvoxarg.github.io/rss-prensa-rga/docs"
+          TG_CHANNEL: "PrensaMuniRGA"
+          SOURCE_NAME: "Prensa Municipal RGA"
+        run: python build_feed.py
+
+      - name: Commit and push generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --staged --quiet; then
+            git commit -m "Update feed.xml"
+            git push
+          fi
