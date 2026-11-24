@@ -37,6 +37,12 @@ jobs:
           git add -A
           if ! git diff --staged --quiet; then
             git commit -m "Update feed.xml"
-            git pull --rebase origin main
-            git push
+            for i in 1 2 3; do
+              git pull --rebase --autostash origin main
+              if git push; then
+                exit 0
+              fi
+              sleep 3
+            done
+            exit 1
           fi
